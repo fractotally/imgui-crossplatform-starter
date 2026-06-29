@@ -164,7 +164,7 @@ int main(int, char**) {
     io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
 
     // Increase touch target size significantly for fingers
-    io.TouchExtraPadding = ImVec2(12.0f, 12.0f);
+    // io.TouchExtraPadding = ImVec2(12.0f, 12.0f);  // Available in newer ImGui versions
 #else
     // Desktop: you can detect monitor DPI here if desired
     ui_scale = 1.0f;
