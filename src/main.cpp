@@ -22,6 +22,20 @@ void main_loop(void* arg) {
     // Poll events (on Emscripten with GLFW this processes input)
     glfwPollEvents();
 
+    // === Update display size every frame (important for resize + mobile) ===
+    int display_w, display_h;
+    glfwGetFramebufferSize(g_window, &display_w, &display_h);
+
+    ImGuiIO& io = ImGui::GetIO();
+    io.DisplaySize = ImVec2((float)display_w, (float)display_h);
+
+    // Framebuffer scale is already set globally via ui_scale above,
+    // but we can refresh it here if needed on resize
+#ifdef __EMSCRIPTEN__
+    float current_scale = EM_ASM_DOUBLE({ return window.devicePixelRatio || 1.0; });
+    io.DisplayFramebufferScale = ImVec2(current_scale, current_scale);
+#endif
+
     // Start the Dear ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -75,9 +89,9 @@ void main_loop(void* arg) {
 
     // Rendering
     ImGui::Render();
-    int display_w, display_h;
-    glfwGetFramebufferSize(g_window, &display_w, &display_h);
-    glViewport(0, 0, display_w, display_h);
+    int display_w2, display_h2; // avoid shadowing
+    glfwGetFramebufferSize(g_window, &display_w2, &display_h2);
+    glViewport(0, 0, display_w2, display_h2);
     glClearColor(g_clear_color.x * g_clear_color.w, g_clear_color.y * g_clear_color.w, g_clear_color.z * g_clear_color.w, g_clear_color.w);
     glClear(GL_COLOR_BUFFER_BIT);
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -138,6 +152,34 @@ int main(int, char**) {
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
     io.IniFilename = nullptr; // Disable .ini file for web/demo
+
+    // === Mobile / High-DPI Scaling (Phase 1) ===
+    float ui_scale = 1.0f;
+
+#ifdef __EMSCRIPTEN__
+    // Get device pixel ratio from browser for proper high-DPI scaling on mobile
+    ui_scale = EM_ASM_DOUBLE({
+        return window.devicePixelRatio || 1.0;
+    });
+
+    // Disable mouse cursor changes on touch devices (looks weird)
+    io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
+
+    // Increase touch target size significantly for fingers
+    io.TouchExtraPadding = ImVec2(12.0f, 12.0f);
+#else
+    // Desktop: you can detect monitor DPI here if desired
+    ui_scale = 1.0f;
+#endif
+
+    // Apply global scaling
+    io.FontGlobalScale = ui_scale;
+    ImGui::GetStyle().ScaleAllSizes(ui_scale);
+
+    // Make buttons and interactive elements more touch-friendly by default
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.FramePadding = ImVec2(style.FramePadding.x * 1.5f, style.FramePadding.y * 1.5f);
+    style.ItemSpacing  = ImVec2(style.ItemSpacing.x * 1.3f, style.ItemSpacing.y * 1.3f);
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();

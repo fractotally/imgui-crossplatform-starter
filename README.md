@@ -11,6 +11,7 @@ Inspired by the architecture and patterns used in the [Tracy Profiler](https://g
 - Clean immediate-mode GUI with demo window included
 - Easy to extend into a full tool/profiler/editor
 - Modern CMake with FetchContent (downloads ImGui + GLFW automatically)
+- **Mobile-friendly web build** (Phase 1 scaling implemented)
 - VSync enabled, dark theme, keyboard/gamepad nav
 
 ## Project Structure
@@ -19,7 +20,9 @@ Inspired by the architecture and patterns used in the [Tracy Profiler](https://g
 imgui-crossplatform-starter/
 ├── .github/
 │   └── workflows/
-│       └── ci.yml        # GitHub Actions CI (native + web builds)
+│       └── ci.yml        # GitHub Actions CI (native + web builds + Pages deploy)
+├── web/
+│   └── shell.html      # Custom Emscripten shell (mobile responsive + high-DPI)
 ├── CMakeLists.txt
 ├── README.md
 ├── scripts/
@@ -72,6 +75,8 @@ python3 -m http.server 8080
 
 You should see the same GUI running inside the browser canvas. It feels native!
 
+**Mobile note**: The web version now includes Phase 1 mobile scaling (high-DPI font & style scaling, larger touch targets, proper framebuffer handling).
+
 ## Continuous Integration & GitHub Pages (GitHub Actions)
 
 This repository includes a ready-to-use GitHub Actions workflow (`.github/workflows/ci.yml`) that:
@@ -113,6 +118,17 @@ To customize (add Windows/macOS jobs, caching, etc.), edit the YAML.
 
 This is the same pattern that makes Tracy's profiler GUI able to target both desktop and WASM web viewer.
 
+## Mobile Improvements (Phase 1 Implemented)
+
+- High-DPI scaling via `devicePixelRatio`
+- `ScaleAllSizes()` + larger `FramePadding` / `ItemSpacing`
+- Increased `TouchExtraPadding` for finger-friendly targets
+- Proper `DisplaySize` + `DisplayFramebufferScale` updated every frame
+- Improved responsive shell with better resize/orientation handling
+- `NoMouseCursorChange` on web
+
+Future phases can add even more mobile-specific behavior.
+
 ## Customizing / Next Steps
 
 1. **Add your own windows** inside `main_loop()` in `src/main.cpp`.
@@ -139,7 +155,7 @@ This starter gives you the boilerplate so you can focus on building your tool's 
 
 - **Web build fails with GLFW/WebGL errors**: Make sure you used `emcmake cmake` and have a recent Emscripten.
 - **Fonts look bad on web**: Add font preloading or use embedded font (ImGui has `ProggyClean` etc. built-in).
-- **HiDPI / scaling issues**: Add `glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);` on native and handle `FramebufferScale` in ImGui.
+- **HiDPI / scaling issues**: The code now automatically scales using `devicePixelRatio`.
 - **Slow on web**: Profile with browser devtools + Emscripten `--profiling` flags. Tracy itself proves complex UIs can run great at 60fps in WASM.
 
 ## License

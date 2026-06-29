@@ -68,22 +68,24 @@
         }
       };
 
-      // Mobile-friendly canvas resizing
+      // Mobile-friendly canvas resizing with proper high-DPI handling
       function resizeCanvas() {
         var canvas = Module.canvas;
+        if (!canvas) return;
+
         var devicePixelRatio = window.devicePixelRatio || 1;
         
-        // Set canvas size to fill the window
-        canvas.width = window.innerWidth * devicePixelRatio;
-        canvas.height = window.innerHeight * devicePixelRatio;
+        // Set the internal canvas resolution to device pixels (for crisp rendering)
+        canvas.width = Math.floor(window.innerWidth * devicePixelRatio);
+        canvas.height = Math.floor(window.innerHeight * devicePixelRatio);
         
-        // Maintain aspect ratio visually if needed, but for ImGui tools full screen is usually best
+        // Set the CSS size to logical pixels (what the user sees)
         canvas.style.width = window.innerWidth + 'px';
         canvas.style.height = window.innerHeight + 'px';
         
-        // Notify the app if it listens for resize (optional)
-        if (Module._emscripten_resize && typeof Module._emscripten_resize === 'function') {
-          Module._emscripten_resize(canvas.width, canvas.height);
+        // Optional hook for native code
+        if (typeof Module._on_canvas_resized === 'function') {
+          Module._on_canvas_resized(canvas.width, canvas.height);
         }
       }
 
