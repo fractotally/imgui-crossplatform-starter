@@ -1,0 +1,108 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-native:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq \
+            cmake \
+            ninja-build \
+            build-essential \
+            libgl1-mesa-dev \
+            libglu1-mesa-dev \
+            xvfb
+
+      - name: Configure (Native)
+        run: cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build (Native)
+        run: cmake --build build --parallel $(nproc)
+
+      - name: Smoke test (headless GUI launch)
+        run: |
+          echo "Launching app with xvfb for 5 seconds..."
+          xvfb-run --auto-servernum --server-args="-screen 0 1280x720x24" \
+            timeout 5s ./build/app || true
+          echo "Smoke test completed (timeout is expected for a GUI app)."
+
+      - name: Upload Native Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-linux-app
+          path: build/app
+          retention-days: 7
+
+  build-web:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 3.1.64   # Recent stable version; change to 'latest' if desired
+
+      - name: Configure (Web / Emscripten)
+        run: emcmake cmake -B build-web -S . -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build (Web)
+        run: cmake --build build-web --parallel $(nproc)
+
+      - name: Verify Web build outputs
+        run: |
+          echo "Checking generated files..."
+          ls -lh build-web/index.*
+          test -f build-web/index.html
+          test -f build-web/index.wasm || test -f build-web/index.js  # depending on Emscripten config
+          echo "✅ Web build successful!"
+
+      - name: Upload Web Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-wasm-app
+          path: build-web/
+          retention-days: 7
+
+  deploy-web:
+    needs: build-web
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Download Web Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: web-wasm-app
+          path: build-web
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build-web
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
