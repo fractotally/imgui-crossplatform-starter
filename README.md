@@ -11,7 +11,7 @@ Inspired by the architecture and patterns used in the [Tracy Profiler](https://g
 - Clean immediate-mode GUI with demo window included
 - Easy to extend into a full tool/profiler/editor
 - Modern CMake with FetchContent (downloads ImGui + GLFW automatically)
-- **Mobile-friendly web build** (Phase 1 scaling implemented)
+- **Mobile-friendly web build** (Phases 1-3 scaling + touch + adaptive UI implemented)
 - VSync enabled, dark theme, keyboard/gamepad nav
 
 ## Project Structure
@@ -75,7 +75,7 @@ python3 -m http.server 8080
 
 You should see the same GUI running inside the browser canvas. It feels native!
 
-**Mobile note**: The web version now includes Phase 1 mobile scaling (high-DPI font & style scaling, larger touch targets, proper framebuffer handling).
+**Mobile note**: The web version now includes Phase 1-3 improvements (high-DPI scaling, touch padding, adaptive UI sizing, better resize).
 
 ## Continuous Integration & GitHub Pages (GitHub Actions)
 
@@ -118,12 +118,13 @@ To customize (add Windows/macOS jobs, caching, etc.), edit the YAML.
 
 This is the same pattern that makes Tracy's profiler GUI able to target both desktop and WASM web viewer.
 
-## Mobile Improvements (Phase 1 Implemented)
+## Mobile Improvements (Phases 1-3 Implemented)
 
 - High-DPI scaling via `devicePixelRatio`
 - `ScaleAllSizes()` + larger `FramePadding` / `ItemSpacing`
 - Increased `TouchExtraPadding` for finger-friendly targets
 - Proper `DisplaySize` + `DisplayFramebufferScale` updated every frame
+- Runtime mobile detection and adaptive UI sizing
 - Improved responsive shell with better resize/orientation handling
 - `NoMouseCursorChange` on web
 

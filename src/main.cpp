@@ -89,9 +89,7 @@ void main_loop(void* arg) {
 
     // Rendering
     ImGui::Render();
-    int display_w2, display_h2; // avoid shadowing
-    glfwGetFramebufferSize(g_window, &display_w2, &display_h2);
-    glViewport(0, 0, display_w2, display_h2);
+    glViewport(0, 0, display_w, display_h);
     glClearColor(g_clear_color.x * g_clear_color.w, g_clear_color.y * g_clear_color.w, g_clear_color.z * g_clear_color.w, g_clear_color.w);
     glClear(GL_COLOR_BUFFER_BIT);
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
