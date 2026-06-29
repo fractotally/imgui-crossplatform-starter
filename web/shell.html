@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ImGui Cross-Platform Demo</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #1a1a2e;
+        color: #eaeaea;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        overflow: hidden;
+        touch-action: none; /* Prevent browser gestures */
+      }
+      
+      #canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        outline: none;
+        border: none;
+        image-rendering: crisp-edges;
+        touch-action: none;
+      }
+      
+      .emscripten {
+        display: none;
+      }
+      
+      .loading {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        color: #aaa;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="loading" class="loading">
+      <p>Loading ImGui Demo...</p>
+    </div>
+    
+    <canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
+    
+    <script type="text/javascript">
+      var Module = {
+        canvas: (function() {
+          var canvas = document.getElementById('canvas');
+          return canvas;
+        })(),
+        setStatus: function(text) {
+          if (!Module.setStatus.last) Module.setStatus.last = { time: Date.now(), text: '' };
+          if (text === Module.setStatus.last.text) return;
+          var m = document.getElementById('loading');
+          if (text) {
+            m.innerHTML = text;
+          } else {
+            m.style.display = 'none';
+          }
+          Module.setStatus.last.text = text;
+        }
+      };
+
+      // Mobile-friendly canvas resizing
+      function resizeCanvas() {
+        var canvas = Module.canvas;
+        var devicePixelRatio = window.devicePixelRatio || 1;
+        
+        // Set canvas size to fill the window
+        canvas.width = window.innerWidth * devicePixelRatio;
+        canvas.height = window.innerHeight * devicePixelRatio;
+        
+        // Maintain aspect ratio visually if needed, but for ImGui tools full screen is usually best
+        canvas.style.width = window.innerWidth + 'px';
+        canvas.style.height = window.innerHeight + 'px';
+        
+        // Notify the app if it listens for resize (optional)
+        if (Module._emscripten_resize && typeof Module._emscripten_resize === 'function') {
+          Module._emscripten_resize(canvas.width, canvas.height);
+        }
+      }
+
+      window.addEventListener('resize', resizeCanvas);
+      window.addEventListener('orientationchange', function() {
+        setTimeout(resizeCanvas, 100);
+      });
+
+      // Initial resize
+      window.addEventListener('load', function() {
+        setTimeout(resizeCanvas, 100);
+      });
+
+      // Prevent pull-to-refresh and other gestures on mobile
+      document.addEventListener('touchmove', function(e) {
+        if (e.target.id === 'canvas') {
+          e.preventDefault();
+        }
+      }, { passive: false });
+
+      // Keyboard handling improvements
+      document.addEventListener('keydown', function(e) {
+        if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].indexOf(e.code) > -1) {
+          e.preventDefault();
+        }
+      }, false);
+    </script>
+    
+    {{{ SCRIPT }}}
+  </body>
+</html>

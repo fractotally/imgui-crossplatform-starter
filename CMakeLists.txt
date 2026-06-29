@@ -66,6 +66,7 @@ if(EMSCRIPTEN)
         "-sALLOW_MEMORY_GROWTH=1"
         "-sINITIAL_MEMORY=67108864"
         "-sWASM=1"
+        "--shell-file ${CMAKE_CURRENT_SOURCE_DIR}/web/shell.html"
         # For debugging: uncomment
         # "-gsource-map"
         # "-sASSERTIONS=1"
